@@ -1,11 +1,22 @@
 import requests
 from bs4 import BeautifulSoup
-res=requests.get('http://www.xiachufang.com/explore/')
-soup=BeautifulSoup(res.text,'html.parser')
-list_name=soup.find_all('p',class_='name')
-list_ing=soup.find_all('p',class_='ing ellipsis')
-for i in range(len(list_name)):
-    print(list_name[i].text.strip())
-    print(list_ing[i].text.strip())
-    list_url=list_name[i].find('a')
-    print('http://www.xiachufang.com'+list_url['href'])
+for i in range(25):
+    res=requests.get('https://movie.douban.com/top250?start='+str(i*25)+'&filter=')
+    soup=BeautifulSoup(res.text,'html.parser')
+    lists=soup.find('ol',class_='grid_view')
+    txt=lists.find_all('li')
+    for i in txt:
+        num=i.find('em').text
+        name=i.find('span',class_='title').text.strip()
+        rating_num=i.find('span',class_='rating_num').text
+        quote=i.find('span',class_='inq')
+        url=i.find('div',class_='hd')
+        final_url=url.find('a')['href']
+        print(num,name,rating_num)
+        print(final_url)
+        if quote!=None:
+            print(quote.text)
+        else:
+            print('没有主题。')
+
+
