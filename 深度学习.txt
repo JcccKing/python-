@@ -1,0 +1,105 @@
+学习率和损失函数
+import tensorflow as tf
+LEARNING_RATE_BASE =0.1 #最初学习率
+LEARNING_RATE_DECAY = 0.99 #学习率衰减率
+LEARNING_RATE_STEP = 1#未入多少轮batch_size更新一次学习率
+#一般设为总样本数/BATCH_SIZE
+#运行了几轮 BATCH_SIZE 的计数器，初值给0，设为不被训练
+global_step = tf.Variable(0, trainable=False)
+#定义指数下降学习率
+learning_rate = tf.train.exponential_decay(LEARNING_RATE_BASE,global_step,LEARNING_RATE_STEP,
+LEARNING_RATE_DECAY,staircase=True)
+#定义优化参数，初值给10
+w = tf.Variable(tf.constant(5,dtype=tf.float32))
+#定义损失函数loss
+loss= tf.square(w+1)
+#定义反向传播方法
+train_step = tf.train.GradientDescentOptimizer(learning_rate).minimize(loss,global_step=global_step)
+#生成会话，训练40ci
+with tf.Session() as sess:
+    init_op = tf.global_variables_initializer()
+    sess.run(init_op)
+    for i in range(40):
+        sess.run(train_step)
+        learning_rate_val = sess.run(learning_rate)
+        global_step_val = sess.run(global_step)
+        w_val = sess.run(w)
+        loss_val = sess.run(loss)
+        print(i,global_step_val,w_val,learning_rate_val,loss_val)
+
+滑动平均
+import tensorflow as tf
+#1.定义变量及滑动平均类
+#定义一个32位浮点变量，初始值为0.0，这个代码就是不断更新w1参数，优化w1参数，
+#滑动平均做了一个W1的影子
+w1 = tf.Variable(0,dtype=tf.float32)
+#定义num_updates（NN迭代轮数），初始值为0，不可被优化训练，这个参数不训练
+global_step = tf.Variable(0,trainable = False)
+#实例化滑动平均类，给删剪率0.99，当前轮数global_step
+MOVING_AVERAGE_DECAY = 0.99
+ema = tf.train.ExponentialMovingAverage(MOVING_AVERAGE_DECAY,global_step)
+#ema.apply后括号里是更新列表，每次运行sess.run(emo_op)时，，对更新列表中的元素求滑动平均值
+#在实际应用中会使用tf.trainable_variables()自动将所有待训练的参数汇总为列表
+ema_op = ema.apply(tf.trainable_variables())
+#2.查看不同迭代中的变量趋之变化
+with tf.Session() as sess:
+    init_op = tf.global_variables_initializer()
+    sess.run(init_op)
+    #用ema.average(w1)获取w1滑动平均值
+    print(sess.run([w1, ema.average(w1)]))
+    #参数w1的值赋值1
+    sess.run(tf.assign(w1, 1))
+    sess.run(ema_op)
+    print(sess.run([w1,ema.average(w1)]))
+    #更新step和w1的值，模拟100论迭代，参数w1变为10
+    sess.run(tf.assign(global_step,100))
+    sess.run(tf.assign(w1,10))
+    sess.run(ema_op)
+    print(sess.run([w1, ema.average(w1)]))
+    #每次sess.run会更新一次w1的滑动平均值
+    sess.run(ema_op)
+    print(sess.run([w1,ema.average(w1)]))
+    sess.run(ema_op)
+    print(sess.run([w1,ema.average(w1)]))
+    sess.run(ema_op)
+    print(sess.run([w1,ema.average(w1)]))
+    sess.run(ema_op)
+    print(sess.run([w1,ema.average(w1)]))
+    sess.run(ema_op)
+    print(sess.run([w1,ema.average(w1)]))
+    sess.run(ema_op)
+    print(sess.run([w1,ema.average(w1)]))
+    sess.run(ema_op)
+
+正则化缓解过拟合
+正则化在损失函数中引入模型复杂度指标，利用给w加权值
+弱化了训练数据的噪声
+loss=loss(y与y_)+REGULARIZER * loss(w)
+
+Demo
+├─data                    //本地词库
+├─dist                    //bmob云的sdk
+├─images                  //图片素材
+├─pages                   //
+│  ├─about                //关于我
+│  ├─all_detail           //统计页，学习情况详情
+│  ├─audio_test           //听音词汇测试，本版本废弃
+│  ├─choice               //挑选单词书，本版本废弃
+│  ├─collect_card         //收集单词的卡片
+│  ├─detail-word          //单词收索页，本版本废弃
+│  ├─index                //
+│  ├─job                  //选词页面
+│  ├─me                   //设置页面
+│  ├─my_word              //已挑选的单词展示页
+│  ├─rank                 //排名页，本版本废弃
+│  ├─search               //搜索页，本版本废弃
+│  ├─study                //学习页，重要页面
+│  ├─suggestion           //建议页
+│  └─test                 //词汇测试页
+└─utils
+<button class='but1' bindtap='denglu' catchtap="onnewsdetail">登录</button>
+
+8d03158e92079f64a77f8b640ba6897a
+
+
+2019-06-18 14:35:14.102 ERROR 5568 --- [reate-812143047] com.alibaba.druid.pool.DruidDataSource   : create connection SQLException, url: jdbc:mysql://127.0.0.1:3306/guns_flowable?autoReconnect=true&useUnicode=true&characterEncoding=utf8&zeroDateTimeBehavior=convertToNull&useSSL=false, errorCode 0, state 08001
