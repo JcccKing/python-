@@ -1,4 +1,2 @@
 # python-
-python入门练习
-deep learning
-splider
+入门算法，爬虫，深度学习。
